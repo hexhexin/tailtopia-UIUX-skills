@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""TailTopia 整合 UI 稿逐屏截图器。
+"""整合 UI 稿逐屏截图器。
 
 把 ui-*-integrated-*.html 这类"一页里排了 N 个手机框"的整合稿，
 拆成一屏一张 PNG，供逐屏肉眼核验（布局崩没崩、SVG 画对没画对、
