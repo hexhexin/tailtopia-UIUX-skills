@@ -14,8 +14,8 @@
 克隆下来，把需要的 skill 目录复制（或软链）到 Claude Code 的 skills 目录：
 
 ```bash
-git clone git@github.com:<你的账号>/claude-skills.git
-cd claude-skills
+git clone git@github.com:hexhexin/tailtopia-UIUX-skills.git
+cd tailtopia-UIUX-skills
 
 # 装到某个项目里（只在该项目生效）
 cp -R skills/ui-ux-design-flow /path/to/your-project/.claude/skills/
