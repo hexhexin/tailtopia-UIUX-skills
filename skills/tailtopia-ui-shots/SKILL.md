@@ -20,8 +20,8 @@ description: 'Render each phone screen in an integrated UI mockup deck (多个�
 ## 用法
 
 ```bash
-S="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/skills/tailtopia-ui-shots/shots.py"
-# 或直接写死本机路径，例如：S="$HOME/work/MY-PROJECT/.claude/skills/tailtopia-ui-shots/shots.py"
+# 自动定位 shots.py：项目级安装和全局安装都能找到（在项目根目录下执行）
+S=$(ls .claude/skills/tailtopia-ui-shots/shots.py ~/.claude/skills/tailtopia-ui-shots/shots.py 2>/dev/null | head -1)
 
 python3 "$S" "Pet Project/TailTopia/V1.1.2/ui-standalone-features-integrated-v1.html"           # 全量
 python3 "$S" <稿件.html> A7 P4                                                                    # 只截指定屏
