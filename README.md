@@ -30,5 +30,5 @@ cp -R skills/ui-ux-design-flow ~/.claude/skills/
 
 这两个 skill 是**按我自己的工作区习惯写的**，直接拿去用需要改几处：
 
-- `ui-ux-design-flow` 里引用了一个私有仓库（`petgo-platform`）和一批本机记忆 slug（`feedback_tailtopia_*`）。这些是「去哪儿查真实代码实现」的指路牌，换成你自己项目的仓库地址即可，工作流本身是通用的。
+- `ui-ux-design-flow` 里的代码路径、颜色/文案取值位置、以及踩坑实录都来自一个 Flutter 私有仓库（`petgo-platform`）。这些是「去哪儿查真实代码实现」的指路牌，换成你自己项目的对应位置即可，**五步工作流和那些硬规则本身是通用的**。
 - `tailtopia-ui-shots` 的 `shots.py` 依赖 `/Applications/Google Chrome.app`，`--sheet` 拼图额外需要 Pillow。它只认 `.phone-shell` / `.spec-shell` 两种容器，屏号取自 `<span class="frame-tag">`——如果你的 mockup 用别的 class，需要改脚本。
