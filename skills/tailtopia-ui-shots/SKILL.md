@@ -48,6 +48,6 @@ python3 "$S" <稿件.html> -o /tmp/shots                                        
 
 ## 相关约定
 
-- 页面框里零解释 —— 见记忆 `feedback_tailtopia_ui_no_fr_labels_in_mockup`
+- 页面框里零解释 —— 手机框内只能有真实用户看得见的东西，批注一律放框外
 - 真实页面用 `.phone-shell`，规格图/对照图用 `.spec-shell`（虚线卡 + ◇ 标记），后者才允许出现中文标注
-- 画之前先对着 `~/work/petgo-platform` 验证逻辑 —— 见记忆 `feedback_tailtopia_ui_verify_logic_first`
+- 画之前先对着真实代码验证逻辑，别把 PRD 文字直译成像素 —— 完整规则见同仓库的 `ui-ux-design-flow` skill
