@@ -69,14 +69,20 @@ for s in ui-ux-pro-max make-interfaces-feel-better frontend-design; do ln -s "$R
 .claude/ui-ux-design-flow.config.md
 ```
 
-**你不用手写。** 装好后直接让 Claude 开始做设计稿，skill 的第 0 步发现配置不存在，
-会把 [`skills/ui-ux-design-flow/config.example.md`](skills/ui-ux-design-flow/config.example.md)
-里的问题一次性问你，答完自动生成配置文件。要提前看有哪些问题，打开那个模板即可。
+**你不用手写，也不用一次答完。** 装好后直接让 Claude 开始做设计稿，skill 第 0 步发现配置
+不存在，会先自己查（项目名取文件夹名、技术栈看 `pubspec.yaml`/`package.json`、仓库地址读
+`git remote`），然后**只问你 4 个问题**：
 
-问的大致是：项目名与技术栈、代码仓库在哪 / 本地路径 / 分支约定、页面代码目录、
-文案和配色文件、设计稿与决策日志放哪、需求文档在哪。
+1. 代码 clone 在本机哪个目录？
+2. 页面代码在哪个子目录？
+3. 文案从哪个文件取？
+4. 配色/主题从哪个文件取？
 
-答不上来的项填 `未配置`，skill 用到时会单独问你，不会自己瞎猜。
+其余 10 项全部走默认值，真正用到且默认不适用时才单独问你。完整清单见
+[`config.example.md`](skills/ui-ux-design-flow/config.example.md)。
+
+这 4 项是硬门槛：**缺任何一项 skill 会停下来问，不会硬着头皮往下画。** 因为没有真实代码
+可对照时，设计稿只能照需求文档的文字瞎编，而这正是本工作流要杜绝的头号问题。
 
 配置文件是本机私有的，不要提交到公开仓库。多个项目各有各的配置，互不影响。
 
