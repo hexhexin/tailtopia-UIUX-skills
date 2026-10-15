@@ -10,15 +10,17 @@
     python3 shots.py <稿件.html> A7 P4            # 只截指定屏
     python3 shots.py <稿件.html> --list           # 只列屏号，不截图
     python3 shots.py <稿件.html> --sheet          # 额外拼一张缩略图总览
-    python3 shots.py <稿件.html> -o /tmp/out      # 指定输出目录
+    python3 shots.py <稿件.html> -o <目录>        # 指定输出目录（需要留图时用）
 
-默认输出到 <稿件同级>/.shots/（已在 .gitignore 忽略）。
+默认输出到系统临时目录下新建的 ui-shots-* 目录，不往稿件旁边写东西。
+每屏的中间 HTML 截完即删，目录里只剩 PNG；看完图由调用方删掉整个目录。
 """
 import argparse
 import os
 import re
 import subprocess
 import sys
+import tempfile
 
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 # 手机框 384×812 + 外边距；spec 规格图更高，给足空间避免底部被裁。
@@ -83,14 +85,18 @@ def main():
     a = ap.parse_args()
 
     src = os.path.abspath(a.html)
-    out = os.path.abspath(a.out) if a.out else os.path.join(os.path.dirname(src), ".shots")
-    os.makedirs(out, exist_ok=True)
     screens = extract(open(src, encoding="utf-8").read())
 
     if a.list:
         for n, label, _ in screens:
             print(f"  {n:6} {label}")
         return
+
+    if a.out:
+        out = os.path.abspath(a.out)
+        os.makedirs(out, exist_ok=True)
+    else:
+        out = tempfile.mkdtemp(prefix="ui-shots-")
 
     if not os.path.exists(CHROME):
         sys.exit(f"找不到 Chrome：{CHROME}")
@@ -109,6 +115,7 @@ def main():
              f"--screenshot={png}", f"file://{f}"],
             capture_output=True, timeout=120,
         )
+        os.remove(f)
         ok = os.path.exists(png)
         done.append((name, png, ok))
         print(f"  {name:6} {'✓' if ok else '✗'} {label[:44]}")
