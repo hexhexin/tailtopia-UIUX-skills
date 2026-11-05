@@ -29,7 +29,7 @@ skill 真正用到某项时会单独问你，绝不自己瞎猜。
 
 ---
 
-## B. 选填 10 项（留空即用默认值）
+## B. 选填 11 项（留空即用默认值）
 
 - **项目/App 名称**：`{{PROJECT_NAME}}`
   <!-- 默认：取项目文件夹名。只影响设计稿标题和文件命名。 -->
@@ -63,6 +63,11 @@ skill 真正用到某项时会单独问你，绝不自己瞎猜。
 
 - **手机框 CSS class**：`{{SHELL_CLASS}}`
   <!-- 默认：.phone-shell（真实页面）/ .spec-shell（规格图）。改了要同步改 shots.py。 -->
+
+- **公共组件目录**：`{{SHARED_WIDGETS}}`
+  <!-- 默认：自己在代码里找 shared/ common/ components/ widgets/ 一类目录。
+       确认弹窗、抽屉、toast 等通用组件在这里；画稿前先查，照搬不重画。
+       有组件规格文档（如 DESIGN.md 的 Components 节）也一并写上。 -->
 
 ---
 
