@@ -17,6 +17,7 @@
 """
 import argparse
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -25,6 +26,8 @@ import tempfile
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 # 手机框 384×812 + 外边距；spec 规格图更高，给足空间避免底部被裁。
 WIN_W, WIN_H = 412, 900
+# 后台 / 桌面稿（.desk-shell，画框约 1440 宽）用桌面视口，否则右半边被裁掉。
+DESK_W, DESK_H = 1500, 1000
 DIV_TOK = re.compile(r"<div\b|</div>")
 
 
@@ -43,7 +46,11 @@ def slice_div(src: str, start: int) -> int:
 
 
 def extract(src_html: str):
-    """→ [(屏号, 该屏完整 HTML 片段)]，同时支持 .phone-shell 与 .spec-shell。"""
+    """→ [(屏号, 标签, 页面 HTML, 是否桌面稿)]，支持 .phone-shell / .spec-shell / .desk-shell。
+
+    屏号来源两种写法都认：`<span class="frame-tag">A1 · 名称</span>`（手机稿）
+    与 `<div class="frame-tag"><b>F1</b>名称</div>`（后台稿）。
+    """
     style = re.search(r"<style>(.*?)</style>", src_html, re.S)
     defs = re.search(r'(<svg style="display:none".*?</svg>)', src_html, re.S)
     if not style:
@@ -51,18 +58,20 @@ def extract(src_html: str):
     style, defs = style.group(1), (defs.group(1) if defs else "")
 
     out = []
-    tags = list(re.finditer(r'<span class="frame-tag">(.*?)</span>', src_html, re.S))
+    tags = list(re.finditer(
+        r'<span class="frame-tag">(.*?)</span>|<div class="frame-tag"><b>([^<]*)</b>(.*?)</div>', src_html, re.S))
     for k, m in enumerate(tags):
-        label = re.sub(r"<[^>]+>", "", m.group(1)).strip()
+        raw = m.group(1) if m.group(1) is not None else f"{m.group(2)} · {m.group(3)}"
+        label = re.sub(r"<[^>]+>", "", raw).strip()
         name = re.sub(r"[^A-Za-z0-9]", "", re.split(r"\s*·\s*", label)[0])
         stop = tags[k + 1].start() if k + 1 < len(tags) else len(src_html)
         pos = -1
-        for cls in ('<div class="phone-shell">', '<div class="spec-shell">'):
+        for cls in ('<div class="phone-shell">', '<div class="spec-shell">', '<div class="desk-shell">'):
             pos = src_html.find(cls, m.end(), stop)
             if pos >= 0:
                 break
         if pos < 0:
-            print(f"  ! {name} 没找到 phone-shell / spec-shell，跳过")
+            print(f"  ! {name} 没找到 phone-shell / spec-shell / desk-shell，跳过")
             continue
         frag = src_html[pos:slice_div(src_html, pos)]
         page = (
@@ -71,7 +80,7 @@ def extract(src_html: str):
             + "\nbody{background:#FAF9FC;margin:0;padding:14px;display:flex}"
             + "</style></head><body>" + defs + frag + "</body></html>"
         )
-        out.append((name, label, page))
+        out.append((name, label, page, cls == '<div class="desk-shell">'))
     return out
 
 
@@ -88,7 +97,7 @@ def main():
     screens = extract(open(src, encoding="utf-8").read())
 
     if a.list:
-        for n, label, _ in screens:
+        for n, label, _, _ in screens:
             print(f"  {n:6} {label}")
         return
 
@@ -103,15 +112,18 @@ def main():
 
     want = set(a.screens) or None
     done = []
-    for name, label, page in screens:
+    for name, label, page, desk in screens:
         if want and name not in want:
             continue
         f = os.path.join(out, f"{name}.html")
         png = os.path.join(out, f"{name}.png")
+        # 每屏写在临时目录：补 <base> 指回稿件目录，稿里相对路径的图片（logo / 二维码）才加载得到
+        base = pathlib.Path(os.path.dirname(src)).as_uri() + "/"
+        page = page.replace("<head>", f'<head><base href="{base}">', 1)
         open(f, "w", encoding="utf-8").write(page)
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-             "--force-device-scale-factor=2", f"--window-size={WIN_W},{WIN_H}",
+             "--force-device-scale-factor=2", f"--window-size={DESK_W if desk else WIN_W},{DESK_H if desk else WIN_H}",
              f"--screenshot={png}", f"file://{f}"],
             capture_output=True, timeout=120,
         )
