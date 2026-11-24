@@ -90,10 +90,14 @@ def main():
     # <style> 块：出处 = 选择器
     for sm in re.finditer(r'<style>(.*?)</style>', html, flags=re.S):
         for rule in re.finditer(r'([^{}]+)\{([^{}]*)\}', sm.group(1)):
-            sel = rule.group(1).strip().split(',')[0][-40:]
+            # 逗号分隔的选择器里，至少有一个的 class 全部出现在手机框里才算（只要求「有交集」会把
+            # .ph .ph-in、.scroll.p 这类同名 class 的无关基础样式也算进来，2026-11-13 改）
+            parts = [p for p in rule.group(1).split(',') if p.strip()]
+            hit = [p for p in parts if (c := set(re.findall(r'\.([A-Za-z0-9_-]+)', p))) and c <= cls_in]
             sel_cls = set(re.findall(r'\.([A-Za-z0-9_-]+)', rule.group(1)))
-            if not (sel_cls & cls_in) or (sel_cls & chrome) or (sel_cls & ICON):
+            if not hit or (sel_cls & chrome) or (sel_cls & ICON):
                 continue
+            sel = re.sub(r'/\*.*?\*/', '', hit[0], flags=re.S).strip()[-40:]
             for decl in rule.group(2).split(';'):
                 if ':' not in decl:
                     continue
