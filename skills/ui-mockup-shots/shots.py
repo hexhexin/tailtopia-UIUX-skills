@@ -28,6 +28,8 @@ CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 WIN_W, WIN_H = 412, 900
 # 后台 / 桌面稿（.desk-shell，画框约 1440 宽）用桌面视口，否则右半边被裁掉。
 DESK_W, DESK_H = 1500, 1000
+# 后台稿里的 .spec-shell 规格图也是桌面宽（约 683），按手机视口截会切掉右半边；表格可能较长，视口加高。
+SPEC_DESK_H = 1600
 DIV_TOK = re.compile(r"<div\b|</div>")
 
 
@@ -46,7 +48,9 @@ def slice_div(src: str, start: int) -> int:
 
 
 def extract(src_html: str):
-    """→ [(屏号, 标签, 页面 HTML, 是否桌面稿)]，支持 .phone-shell / .spec-shell / .desk-shell。
+    """→ [(屏号, 标签, 页面 HTML, (视口宽, 视口高))]，支持 .phone-shell / .spec-shell / .desk-shell。
+
+    稿里只要有 .desk-shell（后台稿），.spec-shell 规格图也用桌面宽截图。
 
     屏号来源两种写法都认：`<span class="frame-tag">A1 · 名称</span>`（手机稿）
     与 `<div class="frame-tag"><b>F1</b>名称</div>`（后台稿）。
@@ -58,6 +62,7 @@ def extract(src_html: str):
     style, defs = style.group(1), (defs.group(1) if defs else "")
 
     out = []
+    desk_deck = '<div class="desk-shell">' in src_html
     tags = list(re.finditer(
         r'<span class="frame-tag">(.*?)</span>|<div class="frame-tag"><b>([^<]*)</b>(.*?)</div>', src_html, re.S))
     for k, m in enumerate(tags):
@@ -80,7 +85,13 @@ def extract(src_html: str):
             + "\nbody{background:#FAF9FC;margin:0;padding:14px;display:flex}"
             + "</style></head><body>" + defs + frag + "</body></html>"
         )
-        out.append((name, label, page, cls == '<div class="desk-shell">'))
+        if cls == '<div class="desk-shell">':
+            win = (DESK_W, DESK_H)
+        elif cls == '<div class="spec-shell">' and desk_deck:
+            win = (DESK_W, SPEC_DESK_H)
+        else:
+            win = (WIN_W, WIN_H)
+        out.append((name, label, page, win))
     return out
 
 
@@ -112,7 +123,7 @@ def main():
 
     want = set(a.screens) or None
     done = []
-    for name, label, page, desk in screens:
+    for name, label, page, win in screens:
         if want and name not in want:
             continue
         f = os.path.join(out, f"{name}.html")
@@ -123,7 +134,7 @@ def main():
         open(f, "w", encoding="utf-8").write(page)
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-             "--force-device-scale-factor=2", f"--window-size={DESK_W if desk else WIN_W},{DESK_H if desk else WIN_H}",
+             "--force-device-scale-factor=2", f"--window-size={win[0]},{win[1]}",
              f"--screenshot={png}", f"file://{f}"],
             capture_output=True, timeout=120,
         )
